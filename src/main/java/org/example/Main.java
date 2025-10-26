@@ -9,7 +9,7 @@ public class Main extends Application {
     public void start(Stage stage) {
         SceneNavigator nav = new SceneNavigator(stage);
         nav.go("/fxml/menu.fxml", new org.example.controller.MenuController(nav), "Quiz – Menu");
-        // --- quick smoke test of the model ---
+        // --- quick test of the mod.el ---
         var q1 = new org.example.model.Question();
         q1.setCategory("General");
         q1.setText("Which class do you extend for a JavaFX app?");
