@@ -1,0 +1,38 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Quiz {
+  - title: String
+  - description: String
+  - pages: List<Page>
+}
+
+class Page {
+  - timeLimit: int
+  - elements: List<Element>
+}
+
+abstract class Element {
+  - type: String
+  - name: String
+  - title: String
+  - isRequired: boolean
+}
+
+class RadioGroupQuestion extends Element {
+  - choicesOrder: String
+  - choices: List<String>
+  - correctAnswer: String
+}
+
+class BooleanQuestion extends Element {
+  - labelTrue: String
+  - labelFalse: String
+  - correctAnswer: boolean
+}
+
+Quiz "1" --> "many" Page
+Page "1" --> "many" Element
+Element <|-- RadioGroupQuestion
+Element <|-- BooleanQuestion
+@enduml
