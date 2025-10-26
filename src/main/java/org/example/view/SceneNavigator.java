@@ -8,18 +8,17 @@ import javafx.stage.Stage;
 public class SceneNavigator {
     private final Stage stage;
 
-    public SceneNavigator(Stage stage) {
-        this.stage = stage;
-    }
+    public SceneNavigator(Stage stage) { this.stage = stage; }
 
     public void go(String fxmlResource, Object controller, String title) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlResource));
+            var url = getClass().getResource(fxmlResource);
+            if (url == null) throw new IllegalArgumentException("FXML not found: " + fxmlResource);
+            FXMLLoader loader = new FXMLLoader(url);
             if (controller != null) loader.setController(controller);
             Parent root = loader.load();
-            Scene scene = new Scene(root, 640, 400);
             stage.setTitle(title);
-            stage.setScene(scene);
+            stage.setScene(new Scene(root, 640, 400));
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,0 +1,22 @@
+[
+  {
+    "category": "General",
+    "text": "Which keyword starts the Java application entry point?",
+    "choices": [
+      {"text": "start",  "correct": false},
+      {"text": "main",   "correct": true},
+      {"text": "run",    "correct": false},
+      {"text": "launch", "correct": false}
+    ]
+  },
+  {
+    "category": "JavaFX",
+    "text": "Which class do you extend to create a JavaFX app?",
+    "choices": [
+      {"text": "Application", "correct": true},
+      {"text": "Stage",       "correct": false},
+      {"text": "Scene",       "correct": false},
+      {"text": "FXMLLoader",  "correct": false}
+    ]
+  }
+]

@@ -10,8 +10,7 @@ public class Question {
 
     public Question() {}
     public Question(String category, String text, List<Choice> choices) {
-        this.category = category;
-        this.text = text;
+        this.category = category; this.text = text;
         if (choices != null) this.choices = choices;
     }
 

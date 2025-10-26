@@ -5,10 +5,7 @@ public class Choice {
     private boolean correct;
 
     public Choice() {}
-    public Choice(String text, boolean correct) {
-        this.text = text;
-        this.correct = correct;
-    }
+    public Choice(String text, boolean correct) { this.text = text; this.correct = correct; }
 
     public String getText() { return text; }
     public boolean isCorrect() { return correct; }
