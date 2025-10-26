@@ -27,7 +27,6 @@ public class MenuController {
 
     @FXML
     public void initialize() {
-        // Strict for Week 2 (2b): Start disabled until a JSON was loaded.
         statusLbl.setText("Load a quiz JSON to begin.");
         startBtn.setDisable(true);
     }

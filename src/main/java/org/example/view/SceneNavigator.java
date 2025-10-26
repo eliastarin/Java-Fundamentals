@@ -17,6 +17,11 @@ public class SceneNavigator {
             FXMLLoader loader = new FXMLLoader(url);
             if (controller != null) loader.setController(controller);
             Parent root = loader.load();
+
+            // add the stylesheet
+            var css = getClass().getResource("/css/app.css");
+            if (css != null) root.getStylesheets().add(css.toExternalForm());
+
             stage.setTitle(title);
             stage.setScene(new Scene(root, 640, 400));
             stage.show();

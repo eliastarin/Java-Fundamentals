@@ -1,0 +1,15 @@
+.root {
+    -fx-font-family: "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-base: #f6f7f9;
+    -fx-background: #d1d1d1;
+}
+.label {
+    -fx-text-fill: #2c3e50;
+}
+.button {
+    -fx-background-radius: 10;
+    -fx-padding: 8 16 8 16;
+}
+.progress-bar {
+    -fx-accent: #2ecc71;
+}

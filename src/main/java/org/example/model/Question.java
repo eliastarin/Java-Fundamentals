@@ -8,6 +8,8 @@ public class Question {
     private String text;
     private List<Choice> choices = new ArrayList<>();
 
+    private Integer timeLimitSec;
+
     public Question() {}
     public Question(String category, String text, List<Choice> choices) {
         this.category = category; this.text = text;
@@ -17,8 +19,10 @@ public class Question {
     public String getCategory() { return category; }
     public String getText() { return text; }
     public List<Choice> getChoices() { return choices; }
+    public Integer getTimeLimitSec() { return timeLimitSec; }
 
     public void setCategory(String category) { this.category = category; }
     public void setText(String text) { this.text = text; }
     public void setChoices(List<Choice> choices) { this.choices = choices; }
+    public void setTimeLimitSec(Integer timeLimitSec) { this.timeLimitSec = timeLimitSec; }
 }

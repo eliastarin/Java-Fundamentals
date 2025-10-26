@@ -14,18 +14,29 @@ import java.util.Collections;
 import java.util.List;
 
 public class QuizService {
+
     private final ObjectMapper mapper = new ObjectMapper();
     private List<Question> questions = Collections.emptyList();
 
+    // Current quiz
+    private String lastQuizId = "quiz";
+    private String lastQuizName = "Quiz";
+
     public List<Question> getQuestions() { return questions; }
+
     public void clear() { questions = Collections.emptyList(); }
 
-    /** Load /data/quiz.json from resources (simple format). */
+    public String getLastQuizId() { return lastQuizId; }
+
+    public String getLastQuizName() { return lastQuizName; }
+
     public boolean loadDefaultQuiz() {
         try (InputStream in = getClass().getResourceAsStream("/data/quiz.json")) {
             if (in == null) return false;
-            List<Question> loaded = mapper.readValue(in, new TypeReference<>() {});
+            List<Question> loaded = mapper.readValue(in, new TypeReference<List<Question>>() {});
             this.questions = loaded != null ? loaded : Collections.emptyList();
+            this.lastQuizId = "default";
+            this.lastQuizName = "Default Quiz";
             return !this.questions.isEmpty();
         } catch (Exception e) {
             e.printStackTrace();
@@ -34,12 +45,17 @@ public class QuizService {
         }
     }
 
-    /** Load from filesystem. Supports our simple format OR the teacher's SurveyJS format. */
     public boolean loadFromFile(Path path) {
         File file = new File(path.toString());
-        // 1) Try the simple format first
+
+        String base = file.getName();
+        int dot = base.lastIndexOf('.');
+        String fallback = (dot > 0 ? base.substring(0, dot) : base)
+                .replaceAll("\\W+", "-").toLowerCase();
+        this.lastQuizId = fallback;
+        this.lastQuizName = fallback;
+
         if (tryLoadSimple(file)) return true;
-        // 2) Try converting the teacher's SurveyJS format
         if (tryLoadSurveyJS(file)) return true;
 
         this.questions = Collections.emptyList();
@@ -48,24 +64,31 @@ public class QuizService {
 
     private boolean tryLoadSimple(File file) {
         try {
-            List<Question> loaded = mapper.readValue(file, new TypeReference<>() {});
+            List<Question> loaded = mapper.readValue(file, new TypeReference<List<Question>>() {});
             if (loaded != null && !loaded.isEmpty()) {
                 this.questions = loaded;
                 return true;
             }
-        } catch (Exception ignore) { /* fall back */ }
+        } catch (Exception ignore) { }
         return false;
     }
 
-    /**
-     * Convert the SurveyJS-style JSON in the assignment to our internal model:
-     * - Assume one question per page (as allowed by the brief).
-     * - Supports "radiogroup" and "boolean".
-     */
     private boolean tryLoadSurveyJS(File file) {
         try {
             JsonNode root = mapper.readTree(file);
             if (root == null) return false;
+
+            JsonNode quizIdNode = root.get("quizId");
+            if (quizIdNode != null && quizIdNode.isTextual() && !quizIdNode.asText().isBlank()) {
+                this.lastQuizId = quizIdNode.asText().trim();
+            }
+
+            JsonNode titleNode = root.get("title");
+            if (titleNode != null && titleNode.isTextual() && !titleNode.asText().isBlank()) {
+                this.lastQuizName = titleNode.asText().trim();
+            } else {
+                this.lastQuizName = this.lastQuizId; // fallback to id
+            }
 
             JsonNode pages = root.get("pages");
             if (pages == null || !pages.isArray()) return false;
@@ -76,21 +99,25 @@ public class QuizService {
                 JsonNode elements = page.get("elements");
                 if (elements == null || !elements.isArray() || elements.size() == 0) continue;
 
-                // one question per page as per assignment
                 JsonNode elem = elements.get(0);
 
-                String type = text(elem, "type");      // "radiogroup" | "boolean"
-                String title = text(elem, "title");    // question text
+                String type = text(elem, "type");
+                String title = text(elem, "title");
                 if (title == null || title.isBlank()) continue;
 
                 Question q = new Question();
-                q.setCategory(type != null ? type : ""); // optional category
+                q.setCategory(type != null ? type : "");
                 q.setText(title);
+
+                // time limit
+                Integer timeLimit = (page.get("timeLimit") != null && page.get("timeLimit").isInt())
+                        ? page.get("timeLimit").asInt() : null;
+                q.setTimeLimitSec(timeLimit);
 
                 List<Choice> choices = new ArrayList<>();
 
                 if ("radiogroup".equalsIgnoreCase(type)) {
-                    // choices: [ "A", "B", ... ], correctAnswer: "B"
+                    // choices
                     String correct = text(elem, "correctAnswer");
                     JsonNode arr = elem.get("choices");
                     if (arr != null && arr.isArray()) {
@@ -100,14 +127,14 @@ public class QuizService {
                         }
                     }
                 } else if ("boolean".equalsIgnoreCase(type)) {
-                    // labelTrue/labelFalse optional; default to "True"/"False"
-                    String labelTrue = textOrDefault(elem, "labelTrue", "True");
+                    // true/false
+                    String labelTrue  = textOrDefault(elem, "labelTrue",  "True");
                     String labelFalse = textOrDefault(elem, "labelFalse", "False");
                     boolean correct = elem.get("correctAnswer") != null && elem.get("correctAnswer").asBoolean(false);
                     choices.add(new Choice(labelTrue,  correct));
                     choices.add(new Choice(labelFalse, !correct));
                 } else {
-                    // Unknown type -> skip
+                    // unsupported type
                     continue;
                 }
 
@@ -117,10 +144,11 @@ public class QuizService {
 
             this.questions = result;
             return !this.questions.isEmpty();
+
         } catch (Exception e) {
-            // keep quiet; caller will show an error dialog
+            e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
     private static String text(JsonNode node, String field) {
