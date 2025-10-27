@@ -27,5 +27,6 @@
     <HBox spacing="10">
         <Button onAction="#onFinish" text="Finish Quiz (Save)" />
         <Button onAction="#onBack" text="Back to Menu" />
+        <Button onAction="#onExportCsv" text="Export CSV" />
     </HBox>
 </VBox>

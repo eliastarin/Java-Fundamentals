@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import javafx.stage.FileChooser;
+import java.io.File;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -12,7 +14,6 @@ import javafx.stage.Window;
 import org.example.service.QuizService;
 import org.example.service.ResultsService;
 import org.example.view.SceneNavigator;
-
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
@@ -88,6 +89,30 @@ public class ResultsController {
             showError("Failed to save results: " + e.getMessage());
         }
     }
+
+    // exporting the CSV
+    @FXML
+    public void onExportCsv() {
+        try {
+            String quizId = service.getLastQuizId();
+            String quizName = service.getLastQuizName();
+
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Export Leaderboard CSV");
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV files", "*.csv"));
+            chooser.setInitialFileName(quizId + "-leaderboard.csv");
+
+            File file = chooser.showSaveDialog(owner);
+            if (file == null) return;
+
+            // export
+            resultsService.exportCsv(quizId, quizName, file);
+            showInfo("Exported to: " + file.getAbsolutePath());
+        } catch (IOException e) {
+            showError("Failed to export CSV: " + e.getMessage());
+        }
+    }
+
 
     @FXML
     public void onBack() {
