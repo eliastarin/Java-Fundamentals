@@ -21,6 +21,13 @@ public class ResultsService {
         public int correctQuestions;
         public String date;
 
+
+        public String getPlayerName()      { return playerName; }
+        public int    getTotalQuestions()  { return totalQuestions; }
+        public int    getCorrectQuestions(){ return correctQuestions; }
+        public String getDate()            { return date; } // if your field is named dateIso, rename accordingly
+
+
         public ResultEntry() {}
         public ResultEntry(String playerName, int total, int correct, String dateIso) {
             this.playerName = playerName;
@@ -55,7 +62,6 @@ public class ResultsService {
             data.results = new ArrayList<>();
         }
 
-        // keep quiz id/name up to date
         data.quizId = quizId;
         data.name = quizName;
 
@@ -70,4 +76,9 @@ public class ResultsService {
     public static ResultEntry makeEntry(String playerName, int total, int correct) {
         return new ResultEntry(playerName, total, correct, Instant.now().toString());
     }
+
+    public java.util.List<ResultEntry> loadAll(String quizId, String quizName) throws java.io.IOException {
+        return appendAndReadAll(quizId, quizName, null);
+    }
+
 }

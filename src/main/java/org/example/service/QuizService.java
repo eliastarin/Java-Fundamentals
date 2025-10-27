@@ -87,7 +87,7 @@ public class QuizService {
             if (titleNode != null && titleNode.isTextual() && !titleNode.asText().isBlank()) {
                 this.lastQuizName = titleNode.asText().trim();
             } else {
-                this.lastQuizName = this.lastQuizId; // fallback to id
+                this.lastQuizName = this.lastQuizId;
             }
 
             JsonNode pages = root.get("pages");
@@ -160,4 +160,16 @@ public class QuizService {
         String v = text(node, field);
         return (v == null || v.isBlank()) ? def : v;
     }
+    public String renderCompletedHtml(int totalQuestions, int correctQuestions) {
+
+        if(correctQuestions == totalQuestions)
+        {
+            return "<h4>Excellent! You answered all questions correctly!</h4>";
+        }
+        else
+        {
+            return "<h4>You got <b>" + correctQuestions + "</b> out of <b>" + totalQuestions + "</b> correct.</h4>";
+        }
+    }
+
 }

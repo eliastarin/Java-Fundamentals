@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx/21"
-      xmlns:fx="http://javafx.com/fxml/1"
-      alignment="CENTER" spacing="16" prefWidth="740" prefHeight="460" style="-fx-padding:16;">
-    <Label text="Results" style="-fx-font-size:20; -fx-font-weight:bold;"/>
-    <Label fx:id="scoreLbl"/>
-    <HBox spacing="8">
-        <Button text="Finish Quiz (Save)" onAction="#onFinish"/>
-        <Button text="Back to Menu" onAction="#onBack"/>
+<?import javafx.scene.web.*?>
+
+<VBox prefHeight="520" prefWidth="720" spacing="12" style="-fx-padding:16;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+
+    <!-- Quiz info -->
+    <Label fx:id="quizNameLbl" style="-fx-font-size:18; -fx-font-weight:bold;" />
+    <Label fx:id="scoreLbl" prefWidth="0.0" />
+
+    <!-- Completed HTML message -->
+    <WebView fx:id="completedHtmlView" prefHeight="180" prefWidth="688.0" />
+
+    <!-- Leaderboard -->
+    <Label style="-fx-font-size:16; -fx-font-weight:bold;" text="Leaderboard" />
+    <TableView fx:id="leaderboardTable" prefHeight="300">
+        <columns>
+            <TableColumn fx:id="playerCol" prefWidth="260" text="Player name" />
+            <TableColumn fx:id="scoreCol" prefWidth="120" text="Score" />
+            <TableColumn fx:id="dateCol" prefWidth="180" text="Date" />
+        </columns>
+    </TableView>
+
+    <!-- Buttons -->
+    <HBox spacing="10">
+        <Button onAction="#onFinish" text="Finish Quiz (Save)" />
+        <Button onAction="#onBack" text="Back to Menu" />
     </HBox>
-    <Separator/>
-    <Label text="Saved scores for this quiz:" style="-fx-opacity:0.8;"/>
-    <ListView fx:id="resultsList" prefWidth="640" prefHeight="240"/>
 </VBox>

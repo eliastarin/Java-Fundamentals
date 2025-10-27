@@ -1,18 +1,25 @@
 package org.example.controller;
 
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.Window;
 import org.example.service.QuizService;
 import org.example.service.ResultsService;
 import org.example.view.SceneNavigator;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 public class ResultsController {
+
     private final SceneNavigator nav;
     private final QuizService service;
     private final Window owner;
@@ -22,8 +29,14 @@ public class ResultsController {
 
     private final ResultsService resultsService = new ResultsService();
 
+    @FXML private Label quizNameLbl;
     @FXML private Label scoreLbl;
-    @FXML private ListView<String> resultsList;
+    @FXML private WebView completedHtmlView;
+
+    @FXML private TableView<LeaderboardRow> leaderboardTable;
+    @FXML private TableColumn<LeaderboardRow, String> playerCol;
+    @FXML private TableColumn<LeaderboardRow, String> scoreCol;
+    @FXML private TableColumn<LeaderboardRow, String> dateCol;
 
     public ResultsController(SceneNavigator nav,
                              QuizService service,
@@ -41,11 +54,23 @@ public class ResultsController {
 
     @FXML
     public void initialize() {
+        // Quiz name + your score (rounded to int %)
+        String quizName = service.getLastQuizName();
+        quizNameLbl.setText("Quiz name: " + quizName);
         int percent = (total > 0) ? (int)Math.round(100.0 * score / total) : 0;
-        scoreLbl.setText(playerName + ", your score: " + score + " / " + total + " (" + percent + "%)");
+        scoreLbl.setText("Your score: " + percent + "%");
 
-        // Show existing saved results (if any)
-        refreshSavedList(false);
+        // Completed HTML message
+        WebEngine engine = completedHtmlView.getEngine();
+        String completedHtml = service.renderCompletedHtml(total, score);
+        engine.loadContent(completedHtml, "text/html");
+
+        // Leaderboard table columns
+        playerCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().playerName()));
+        scoreCol.setCellValueFactory(c  -> new SimpleStringProperty(c.getValue().scorePercent() + "%"));
+        dateCol.setCellValueFactory(c   -> new SimpleStringProperty(c.getValue().dateISO()));
+
+        refreshLeaderboard();
     }
 
     @FXML
@@ -53,11 +78,12 @@ public class ResultsController {
         try {
             String quizId = service.getLastQuizId();
             String quizName = service.getLastQuizName();
-
             var entry = ResultsService.makeEntry(playerName, total, score);
-            resultsService.appendAndReadAll(quizId, quizName, entry);
 
-            refreshSavedList(true);
+            resultsService.appendAndReadAll(quizId, quizName, entry);
+            refreshLeaderboard();
+
+            showInfo("Saved to: results/" + quizId + "-results.json");
         } catch (IOException e) {
             showError("Failed to save results: " + e.getMessage());
         }
@@ -68,23 +94,31 @@ public class ResultsController {
         nav.go("/fxml/menu.fxml", new MenuController(nav, service, owner), "Quiz – Menu");
     }
 
-    private void refreshSavedList(boolean showOk) {
+    private void refreshLeaderboard() {
         try {
             String quizId = service.getLastQuizId();
             String quizName = service.getLastQuizName();
-            List<ResultsService.ResultEntry> all = resultsService.appendAndReadAll(quizId, quizName, null);
-            resultsList.getItems().setAll(all.stream().map(Object::toString).toList());
-            if (showOk) showInfo("Saved to: results/" + quizId + "-results.json");
-        } catch (IOException ignore) {
-            // No file yet -> nothing to list
+
+            // Load all saved results
+            List<ResultsService.ResultEntry> all = resultsService.loadAll(quizId, quizName);
+
+            // Sort by score desc
+            var rows = all.stream()
+                    .map(LeaderboardRow::fromEntry)
+                    .sorted(Comparator.comparingInt(LeaderboardRow::scorePercent).reversed())
+                    .toList();
+
+            leaderboardTable.getItems().setAll(rows);
+        } catch (IOException e) {
+            leaderboardTable.getItems().clear();
         }
     }
 
     private void showError(String msg) {
         var a = new Alert(Alert.AlertType.ERROR);
         a.initOwner(owner);
-        a.setTitle("Save Error");
-        a.setHeaderText("Could not save results");
+        a.setTitle("Error");
+        a.setHeaderText("Could not complete action");
         a.setContentText(msg);
         a.showAndWait();
     }
@@ -96,5 +130,45 @@ public class ResultsController {
         a.setHeaderText(null);
         a.setContentText(msg);
         a.showAndWait();
+    }
+
+    public static final class LeaderboardRow {
+        private final String playerName;
+        private final int totalQuestions;
+        private final int correctQuestions;
+        private final String dateISO;
+
+        public LeaderboardRow(String playerName, int totalQuestions, int correctQuestions, String dateISO) {
+            this.playerName = playerName;
+            this.totalQuestions = totalQuestions;
+            this.correctQuestions = correctQuestions;
+            this.dateISO = dateISO;
+        }
+
+        public static LeaderboardRow fromEntry(ResultsService.ResultEntry e) {
+            return new LeaderboardRow(
+                    e.getPlayerName(),
+                    e.getTotalQuestions(),
+                    e.getCorrectQuestions(),
+                    e.getDate()
+            );
+        }
+
+        public String playerName() { return playerName; }
+
+        public int scorePercent() {
+            return (totalQuestions > 0)
+                    ? (int)Math.round(100.0 * correctQuestions / totalQuestions)
+                    : 0;
+        }
+
+        public String dateISO() {
+            // YYYY-MM-DD
+            try {
+                return OffsetDateTime.parse(dateISO).toLocalDate().toString();
+            } catch (Exception ex) {
+                return dateISO;
+            }
+        }
     }
 }
