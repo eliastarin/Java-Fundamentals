@@ -22,12 +22,9 @@ public class GameController {
     private final SceneNavigator nav;
     private final QuizService service;
     private final Window owner;
-
     private final AtomicInteger index = new AtomicInteger(0);
     private int score = 0;
     private String playerName = "";
-
-    // Timer
     private Timeline timer;
     private int timeLeft;        // seconds
     private int timeTotal;       // seconds

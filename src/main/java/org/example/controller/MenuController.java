@@ -1,6 +1,5 @@
 package org.example.controller;
 
-import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;

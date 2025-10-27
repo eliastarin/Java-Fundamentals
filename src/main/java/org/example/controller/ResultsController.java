@@ -55,7 +55,7 @@ public class ResultsController {
 
     @FXML
     public void initialize() {
-        // Quiz name + your score (rounded to int %)
+        // Quiz name + your score
         String quizName = service.getLastQuizName();
         quizNameLbl.setText("Quiz name: " + quizName);
         int percent = (total > 0) ? (int)Math.round(100.0 * score / total) : 0;

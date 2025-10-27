@@ -8,7 +8,7 @@
 
     <!-- Quiz info -->
     <Label fx:id="quizNameLbl" style="-fx-font-size:18; -fx-font-weight:bold;" />
-    <Label fx:id="scoreLbl" prefWidth="0.0" />
+    <Label fx:id="scoreLbl" style="-fx-font-size:18; -fx-font-weight:bold;" />
 
     <!-- Completed HTML message -->
     <WebView fx:id="completedHtmlView" prefHeight="180" prefWidth="688.0" />
