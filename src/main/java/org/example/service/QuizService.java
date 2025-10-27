@@ -14,6 +14,11 @@ import java.util.List;
 
 public class QuizService {
 
+    // practice mode - DOES NOT WORK FULLY
+    private boolean practiceMode;
+    public void setPracticeMode(boolean practiceMode) { this.practiceMode = practiceMode; }
+    public boolean isPracticeMode() { return practiceMode; }
+
     private final ObjectMapper mapper = new ObjectMapper();
     private List<Question> questions = Collections.emptyList();
 

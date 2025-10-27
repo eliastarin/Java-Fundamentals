@@ -4,10 +4,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
-import javafx.util.Duration;
 import org.example.service.QuizService;
 import org.example.view.SceneNavigator;
 
@@ -24,13 +22,15 @@ public class MenuController {
         this.owner = owner;
     }
 
-    @FXML private Button startBtn;
+    @FXML private Button startBtn;       // Start (normal)
+    @FXML private Button practiceBtn;    // Start Practice
     @FXML private Label statusLbl;
 
     @FXML
     public void initialize() {
         statusLbl.setText("Load a quiz JSON to begin.");
-        startBtn.setDisable(true);
+        if (startBtn != null)    startBtn.setDisable(true);
+        if (practiceBtn != null) practiceBtn.setDisable(true);
     }
 
     @FXML
@@ -44,13 +44,26 @@ public class MenuController {
         boolean ok = service.loadFromFile(file.toPath());
         if (ok) {
             statusLbl.setText("Loaded: " + file.getName() + " • " + service.getQuestions().size() + " questions");
-            startBtn.setDisable(false);
+            if (startBtn != null)    startBtn.setDisable(false);
+            if (practiceBtn != null) practiceBtn.setDisable(false);
         } else {
             statusLbl.setText("Failed to load quiz.");
-            startBtn.setDisable(true);
-            showError("Could not read the selected JSON file.\n" +
-                    "Please check that it’s valid and try again.");
+            if (startBtn != null)    startBtn.setDisable(true);
+            if (practiceBtn != null) practiceBtn.setDisable(true);
+            showError("Could not read the selected JSON file.\nPlease check that it’s valid and try again.");
         }
+    }
+
+    @FXML
+    public void onStart() { // NORMAL mode
+        service.setPracticeMode(false);
+        nav.go("/fxml/game.fxml", new GameController(nav, service, owner), "Quiz – Game");
+    }
+
+    @FXML
+    public void onStartPractice() { // PRACTICE mode
+        service.setPracticeMode(true);
+        nav.go("/fxml/game.fxml", new GameController(nav, service, owner), "Quiz – Game");
     }
 
     private void showError(String msg) {
@@ -60,10 +73,5 @@ public class MenuController {
         a.setHeaderText("Error loading quiz");
         a.setContentText(msg);
         a.showAndWait();
-    }
-
-    @FXML
-    public void onStart() {
-        nav.go("/fxml/game.fxml", new GameController(nav, service, owner), "Quiz – Game");
     }
 }

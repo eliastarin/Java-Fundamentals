@@ -26,8 +26,8 @@ public class GameController {
     private int score = 0;
     private String playerName = "";
     private Timeline timer;
-    private int timeLeft;        // seconds
-    private int timeTotal;       // seconds
+    private int timeLeft;   // seconds
+    private int timeTotal;  // seconds
 
     public GameController(SceneNavigator nav, QuizService service, Window owner) {
         this.nav = nav;
@@ -51,7 +51,16 @@ public class GameController {
             return;
         }
         playerName = name;
-        nameLbl.setText("Player: " + playerName);
+        nameLbl.setText("Player: " + playerName + (service.isPracticeMode() ? "  (Practice Mode)" : ""));
+
+        // If practice mode on : hide timer UI (and never start it)
+        if (service.isPracticeMode()) {
+            if (timerLbl != null) timerLbl.setVisible(false);
+            if (timerBar != null) {
+                timerBar.setVisible(false);
+                timerBar.setManaged(false); // remove from layout flow
+            }
+        }
 
         showCurrent();
     }
@@ -74,7 +83,7 @@ public class GameController {
         questionLbl.setText(q.getText());
         progressLbl.setText("Question " + (index.get() + 1) + " / " + qs.size());
 
-        // shuffle
+        // shuffle choices
         choicesBox.getChildren().clear();
         List<Choice> shuffled = new ArrayList<>(q.getChoices());
         Collections.shuffle(shuffled);
@@ -91,12 +100,22 @@ public class GameController {
             choicesBox.getChildren().add(b);
         }
 
-        // start timer for this question
+        // per-question timer
         int defaultSec = 15;
         timeTotal = (q.getTimeLimitSec() != null && q.getTimeLimitSec() > 0) ? q.getTimeLimitSec() : defaultSec;
-        startTimer(timeTotal);
+
+        if (service.isPracticeMode()) {
+            // no timer in practice
+            stopTimer();
+
+            if (timerLbl != null && timerLbl.isVisible()) timerLbl.setText("—");
+            if (timerBar != null && timerBar.isVisible()) timerBar.setProgress(1.0);
+        } else {
+            startTimer(timeTotal);
+        }
     }
-    // start the timer
+
+    // start the timer (normal mode only)
     private void startTimer(int seconds) {
         stopTimer(); // clear previous
         timeLeft = seconds;
@@ -107,7 +126,7 @@ public class GameController {
             updateTimerUI();
             if (timeLeft <= 0) {
                 stopTimer();
-                // time is up
+                // next question if time is up
                 index.incrementAndGet();
                 showCurrent();
             }
@@ -115,6 +134,7 @@ public class GameController {
         timer.setCycleCount(seconds);
         timer.playFromStart();
     }
+
     // stop the timer
     private void stopTimer() {
         if (timer != null) {
@@ -122,11 +142,14 @@ public class GameController {
             timer = null;
         }
     }
+
     // timer UI
     private void updateTimerUI() {
-        timerLbl.setText(timeLeft + "s");
+        if (timerLbl != null) timerLbl.setText(timeLeft + "s");
         double progress = (timeTotal == 0) ? 0 : (double) timeLeft / (double) timeTotal;
-        timerBar.setProgress(progress);
-        timerLbl.setStyle(timeLeft <= 5 ? "-fx-font-weight: bold; -fx-text-fill: #c0392b;" : "");
+        if (timerBar != null) timerBar.setProgress(progress);
+        if (timerLbl != null) {
+            timerLbl.setStyle(timeLeft <= 5 ? "-fx-font-weight: bold; -fx-text-fill: #c0392b;" : "");
+        }
     }
 }
